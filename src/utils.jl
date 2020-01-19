@@ -43,7 +43,7 @@ function compPost(post::Matrix{Float64},lh::Matrix{Float64},N::Int64,K::Int64,I:
 	ephizero=sig_cplus.(phi)
 	ephione=sig_c.(phi)
 	post_n=zeros(Float64,K)
-	for n=1:N
+	Distributed.@sync Distributed.@distributed for n=1:N
 		for k=1:K
 			post_k=one(Float64)
 			for i in iIndex[n]

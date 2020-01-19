@@ -1,4 +1,4 @@
-name = "IRTCalibration"
+name = "IRTC"
 uuid = "d5be0d26-6c5b-4de9-8520-645e180091ad"
 authors = ["Giada Spaccapanico Proietti"]
 version = "0.1.0"

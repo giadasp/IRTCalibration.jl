@@ -1,4 +1,4 @@
-function calibrate(mdl::latentModel)
+function calibrate(mdl::latentModel;debug=true)
 	if mdl.irt.nPar>1
 		firstLatent=2
 	else
@@ -18,15 +18,15 @@ function calibrate(mdl::latentModel)
 		X[:,l+1]=Distributions.support(mdl.estimates.latents[l].dist)
 		W[:,l+1]=Distributions.probs(mdl.estimates.latents[l].dist)
 	end
-	Wk=copy(W[:,firstLatent])
-	Xk=copy(X[:,firstLatent])
+	Wk=W[:,firstLatent]
+	Xk=X[:,firstLatent]
 	startPars=copy(mdl.estimates.pars)
-	startEst=copy(mdl.estimates)
 	if mdl.bs.BS
+		startEst=copy(mdl.estimates)
 		#takes only the first latent
-		(bins,none)=cutR(startEst.latentVals[:,firstLatent];start=mdl.bds.minLatent[1], stop=mdl.bds.maxLatent[1], nBins=K, returnBreaks=false,returnMidPts=true)
-		#pθ=Wk[bins]
-		#pθ=pθ./sum(pθ)
+		(bins,none)=cutR(mdl.estimates.latentVals[:,firstLatent];start=mdl.bds.minLatent[1], stop=mdl.bds.maxLatent[1], nBins=K, returnBreaks=false,returnMidPts=true)
+		pθ=Wk[bins]
+		pθ=pθ./sum(pθ)
 		BSPar=Vector{DataFrame}(undef,nTotPar) #nTotPar x R+1 (id + BS)
 		for p=1:nTotPar
 			BSPar[p]=DataFrame(id=collect(1:nItems))
@@ -58,9 +58,8 @@ function calibrate(mdl::latentModel)
 	else
 		R=mdl.bs.R
 	end
+
 	for r=1:R
-		Wk=copy(W[:,firstLatent])
-		Xk=copy(X[:,firstLatent])
 		nIndex=Array{Array{Int64,1},1}(undef,nItems)
 		iIndex=Array{Array{Int64,1},1}(undef,N)
 		for n=1:N
@@ -73,37 +72,10 @@ function calibrate(mdl::latentModel)
 			mdl.estimates=copy(startEst)
 			if mdl.bs.type=="parametric"
 				if mdl.dt.unbalanced
-					#nsample=sample(collect(1:N),StatsBase.ProbabilityWeights(pθ), Int(floor(mdl.bs.sampleFrac*N)), replace=true)
-					#while size(unique(vcat([iIndex[n] for n in nsample]...)),1)<nItems
-						#nsample=rand(Distributions.DiscreteNonParametric(collect(1:N), pθ),Int(floor(mdl.sampleFrac*N)))
-					#	nsample=sample(collect(1:N),StatsBase.ProbabilityWeights(pθ), Int(floor(mdl.bs.sampleFrac*N)), replace=true)
-					#end
-					nsample=zeros(Int(floor(mdl.bs.sampleFrac*N)))
-					nsample=rand(Distributions.DiscreteNonParametric(collect(1:K), Wk),Int(floor(mdl.bs.sampleFrac*N)))
-					for n=1:size(nsample,1)
-						ns=copy(nsample[n])
-						while size(findall(bins.==ns),1)==0
-							if nsample[n]>(K/2)
-								ns-=1
-							else
-								ns+=1
-							end
-						end
-						nsample[n]=sample(findall(bins.==ns))
-					end
+					nsample=sample(collect(1:N),StatsBase.ProbabilityWeights(pθ), Int(floor(mdl.bs.sampleFrac*N)), replace=true)
 					while size(unique(vcat([iIndex[n] for n in nsample]...)),1)<nItems
-						nsample=rand(Distributions.DiscreteNonParametric(collect(1:K), Wk),Int(floor(mdl.bs.sampleFrac*N)))
-						for n=1:size(nsample,1)
-							ns=copy(nsample[n])
-							while size(findall(bins.==ns),1)==0
-								if nsample[n]>(K/2)
-									ns-=1
-								else
-									ns+=1
-								end
-							end
-							nsample[n]=sample(findall(bins.==ns))
-						end
+						#nsample=rand(Distributions.DiscreteNonParametric(collect(1:N), pθ),Int(floor(mdl.sampleFrac*N)))
+						nsample=sample(collect(1:N),StatsBase.ProbabilityWeights(pθ), Int(floor(mdl.bs.sampleFrac*N)), replace=true)
 					end
 					println(size(nsample,1))
 				else
@@ -176,6 +148,8 @@ function calibrate(mdl::latentModel)
 		# oldPars[2]=copy(newPars)
 		xGap=Inf
 		xGapOld=ones(Float64,7).*Inf
+		Wk=W[:,firstLatent]
+		Xk=X[:,firstLatent]
 		newLh=-Inf
 		oldLh=ones(Float64,3).*(-Inf)
 		oldLatentVals=copy(newEst.latentVals)
@@ -199,8 +173,6 @@ function calibrate(mdl::latentModel)
 		newLatentVals=zeros(newN,nLatent+1)
 		#r=zeros(Float64,nPar,newI)
 		println(newPars[1,1])
-		println(Xk[30:40])
-		println(Wk[30:40])
 		while endOfWhile<1
 			################################################################
 			####					ACCELLERATE
@@ -297,7 +269,7 @@ function calibrate(mdl::latentModel)
 				####					RESCALE
 				################################################################
 				if mdl.eo.denType=="EH" && (s%mdl.eo.intW==0 && s<=mdl.eo.minMaxW[2] && s>=mdl.eo.minMaxW[1])  && mdl.bs.BS==false
-					posterior= compPostSimp(posterior,newN,K,newI,iIndex,newResponses,Wk,phi)
+					posterior, newLh= compPost(posterior,lhMat,newN,K,newI,iIndex,newResponses,Wk,phi)
 					Wk=LinearAlgebra.BLAS.gemv('T', one(Float64), posterior, oneoverN) #if Wk depends only on the likelihoods
 					observed=[LinearAlgebra.dot(Wk,Xk),sqrt(LinearAlgebra.dot(Wk,Xk.^2))]
 					observed=[observed[1]-mdl.estimates.latents[1].metric[1],observed[2]/mdl.estimates.latents[1].metric[2]]
@@ -336,9 +308,10 @@ function calibrate(mdl::latentModel)
 			#println("RMSE for latents is ",RMSE(newLatentVals',newSd.latentVals'))
 			#println("RMSE for θ is ",RMSE(newLatentVals,newSimθ))
 			# end
+			if debug
 			println("end of iteration  #",s)
 			println("newlikelihood is ",newLh)
-
+		    end
 			newTime=time()
 			####################################################################
 			#                           CHECK CONVERGENCE
@@ -362,7 +335,9 @@ function calibrate(mdl::latentModel)
 				deltaPars=(newPars-oldPars[1])./oldPars[1]
 				xGap=maximum(abs.(deltaPars))
 				bestxGap=min(xGap,xGapOld[1])
+				if debug
 				println("Max-change is ",xGap)
+				end
 				if xGap<=mdl.eo.xTolRel
 					println("X ToL reached after ", newTime-oldTime," and ",Int(s)," iterations")
 					endOfWhile=1
@@ -394,13 +369,12 @@ function calibrate(mdl::latentModel)
 			for l=1:nLatent
 				BSLatentVals[l][nsample,r+1].=newLatentVals[:,l]
 			end
-		else
-			mdl.prf.time=time()-startTime
-			mdl.estimates.pars=newPars
-			mdl.estimates.latentVals=newLatentVals
-			mdl.estimates.latents[1].dist=Distributions.DiscreteNonParametric(Xk,Wk)
-			mdl.prf.nIter=s-1
 		end
+		mdl.prf.time=time()-startTime
+		mdl.estimates.pars=newPars
+		mdl.estimates.latentVals=newLatentVals
+		mdl.estimates.latents[1].dist=Distributions.DiscreteNonParametric(Xk,Wk)
+		mdl.prf.nIter=s-1
 		println("end of ",r, " bs replication")
 	end
 	if mdl.bs.BS

@@ -69,7 +69,7 @@ function maxLHMMLE(parsStart::Matrix{Float64},
     opt.maxtime = io.timeLimit
     opt.ftol_rel=  io.fTolRel
     #opt.maxeval=50
-    Distributed.@sync Distributed.@distributed for i=1:nItems
+    for i=1:nItems
         pars_i=max_i(X,sumpk[:,i],r1[:,i],parsStart[:,i],nPar,opt)
         if nPar==1
             parsStart[2,i]=copy(pars_i)
