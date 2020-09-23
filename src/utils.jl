@@ -40,8 +40,8 @@ end
 
 function compPost(post::Matrix{Float64},lh::Matrix{Float64},N::Int64,K::Int64,I::Int64,iIndex::Vector{Vector{Int64}},r::Matrix{Float64},Wk::Vector{Float64},phi::Matrix{Float64})
 	#ephi=exp_c.(phi)
-	ephizero=sig_cplus.(phi)
 	ephione=sig_c.(phi)
+	ephizero=1 .- ephione
 	post_n=zeros(Float64,K)
 	for n=1:N
 		for k=1:K
