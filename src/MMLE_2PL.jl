@@ -305,7 +305,6 @@ function calibrate(mdl::LatentModel)
                         lhMat,
                         newN,
                         K,
-                        newI,
                         iIndex,
                         newResponses,
                         Wk,
