@@ -3,8 +3,7 @@ function max_i(
     sumpk_i::Vector{Float64},
     r1_i::Vector{Float64},
     pars_i::Vector{Float64},
-    n_par::Int64,
-    opt::NLopt.Opt,
+    opt::NLopt.Opt
 )
     function myf(x::Vector, grad::Vector)
         n_par = size(x, 1)
@@ -74,7 +73,7 @@ function maxLHMMLE(
     K = size(X, 1)
     sumpk = zeros(Float64, K, n_items)
     r1 = similar(sumpk)
-    posterior = posterior_simplified(posterior, N, K, n_items, iIndex, responses, Wk, phi)
+    posterior = posterior_simplified(posterior, N, K, iIndex, responses, Wk, phi)
     LinearAlgebra.BLAS.gemm!(
         'T',
         'T',
@@ -102,7 +101,7 @@ function maxLHMMLE(
     opt.ftol_rel = int_opt.f_tol_rel
     #opt.maxeval=50
     Distributed.@sync Distributed.@distributed for i = 1:n_items
-        pars_i = max_i(X, sumpk[:, i], r1[:, i], parsStart[:, i], n_par, opt)
+        pars_i = max_i(X, sumpk[:, i], r1[:, i], parsStart[:, i], opt)
         if n_par == 1
             parsStart[2, i] = copy(pars_i)
         else

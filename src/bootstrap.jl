@@ -3,8 +3,8 @@ function cutR(
     start = "minimum",
     stop = "maximum",
     n_bins = 2,
-    returnBreaks = true,
-    returnMidPts = false,
+    return_breaks = true,
+    return_mid_pts = false,
 )
     if (start == "minimum")
         start = minimum(x)
@@ -29,10 +29,10 @@ function cutR(
             end
         end
     end
-    if (returnBreaks == true || returnMidPts == true)
-        if returnMidPts == false
+    if (return_breaks == true || return_mid_pts == true)
+        if return_mid_pts == false
             return (Int.(y), breaks)
-        elseif returnBreaks == false
+        elseif return_breaks == false
             return (Int.(y), midPts)
         else
             return (Int.(y), breaks, midPts)
@@ -44,8 +44,6 @@ end
 function subset_data(
     dt::Data,
     subset::Vector{Int64},
-    NumberOfTests::Int64,
-    LengthOfTests::Int64,
     est::Block,
     sd::Block,
 ) #method= Booklet(subset=Scalar) or Students(subset=array), su

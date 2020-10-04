@@ -102,7 +102,6 @@ function posterior_simplified(
     post::Matrix{Float64},
     N::Int64,
     K::Int64,
-    I::Int64,
     iIndex::Vector{Vector{Int64}},
     r::Matrix{Float64},
     Wk::Vector{Float64},

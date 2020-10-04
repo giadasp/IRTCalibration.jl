@@ -7,7 +7,7 @@ function pretestCPLEX(
     nCouples,
     f1,
     f2,
-    ol_max,
+    ol_max
 )
     m = JuMP.Model(
         solver = CPLEX.CplexSolver(

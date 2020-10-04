@@ -1,7 +1,6 @@
 function my_rescale(
     X::Vector{Float64},
     Wk::Vector{Float64},
-    metric::Vector{Float64},
     observed::Vector{Float64},
 )
     #println("theta had mean ",Wk'*X)
@@ -22,7 +21,6 @@ function my_rescale(
     Wk = Wk ./ sum(Wk)
     return X, Wk
 end
-
 function cubic_spline_int(X::Vector{Float64}, NewX::Vector{Float64}, Wk::Vector{Float64})
     bw = abs(NewX[2] - NewX[1])
     K = size(X, 1)

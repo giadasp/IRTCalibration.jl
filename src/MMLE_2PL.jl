@@ -29,8 +29,8 @@ function calibrate(mdl::LatentModel)
             start = mdl.bounds.min_latent[1],
             stop = mdl.bounds.max_latent[1],
             n_bins = K,
-            returnBreaks = false,
-            returnMidPts = true,
+            return_breaks = false,
+            return_mid_pts = true,
         )
         #pθ=Wk[bins]
         #pθ=pθ./sum(pθ)
@@ -333,8 +333,8 @@ function calibrate(mdl::LatentModel)
                                 star = mdl.bounds.min_latent[l],
                                 stop = mdl.bounds.max_latent[l],
                                 n_bins = K + (toadd * 2) - 1,
-                                returnBreaks = false,
-                                returnMidPts = true,
+                                return_breaks = false,
+                                return_mid_pts = true,
                             )
                             X[:, l+1] = X[(toadd+1):K+toadd, l+1]
                             W[:, l+1] = pdf.(denType, X[:, l+1])
@@ -386,7 +386,6 @@ function calibrate(mdl::LatentModel)
                         posterior,
                         newN,
                         K,
-                        newI,
                         iIndex,
                         newResponses,
                         Wk,
@@ -414,8 +413,8 @@ function calibrate(mdl::LatentModel)
                                 star = mdl.bounds.min_latent[l],
                                 stop = mdl.bounds.max_latent[l],
                                 n_bins = K + (toadd * 2) - 1,
-                                returnBreaks = false,
-                                returnMidPts = true,
+                                return_breaks = false,
+                                return_mid_pts = true,
                             )
                             X[:, l+1] = X[(toadd+1):K+toadd, l+1]
                             W[:, l+1] = pdf.(denType, X[:, l+1])
@@ -526,7 +525,7 @@ function calibrate(mdl::LatentModel)
             end
             if endOfWhile == 1
                 posterior =
-                    posterior_simplified(posterior, newN, K, newI, iIndex, newResponses, Wk, phi)
+                    posterior_simplified(posterior, newN, K, iIndex, newResponses, Wk, phi)
                 newLatentVals = (posterior * X) ./ (posterior * ones(K, n_latent + 1))
             end
             s = s + 1
