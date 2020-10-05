@@ -55,7 +55,7 @@ function likelihood(
     return likelihood::Matrix{Float64}
 end
 
-function posterior(
+function compute_posterior(
     post::Matrix{Float64},
     lh::Matrix{Float64},
     N::Int64,

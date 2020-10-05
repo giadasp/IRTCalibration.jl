@@ -301,7 +301,7 @@ function calibrate(mdl::LatentModel)
                        s >= mdl.ext_opt.min_max_W[1]
                    ) &&
                    mdl.bootstrap.perform == false# && xGap>0.5 && mdl.bootstrap.perform==false
-                    posterior, new_likelihood = posterior(
+                    posterior, new_likelihood = compute_posterior(
                         posterior,
                         likelihood_matrix,
                         new_N,
