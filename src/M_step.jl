@@ -74,7 +74,7 @@ function max_LH_MMLE(
     K = size(X, 1)
     sumpk = zeros(Float64, K, n_items)
     r1 = similar(sumpk)
-    posterior = posterior_simplified(posterior, N, K, n_items, i_index, responses, Wk, phi)
+    posterior = posterior_simplified(posterior, N, K, i_index, responses, Wk, phi)
     LinearAlgebra.BLAS.gemm!(
         'T',
         'T',

@@ -387,7 +387,6 @@ function calibrate(mdl::LatentModel)
                         posterior,
                         new_N,
                         K,
-                        new_n_items,
                         i_index,
                         new_responses,
                         Wk,
@@ -527,7 +526,7 @@ function calibrate(mdl::LatentModel)
             end
             if endOfWhile == 1
                 posterior =
-                    posterior_simplified(posterior, new_N, K, new_n_items, i_index, new_responses, Wk, phi)
+                    posterior_simplified(posterior, new_N, K, i_index, new_responses, Wk, phi)
                 new_latent_vals = (posterior * X) ./ (posterior * ones(K, n_latent + 1))
             end
             s = s + 1
