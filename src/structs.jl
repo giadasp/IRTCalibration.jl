@@ -49,7 +49,7 @@ mutable struct Bootstrap
     type::String #parametric or nonParametric
     n_bins::Int64
     Bootstrap() = new(false, 1, 2 / 3, "parametric", 50)
-    Bootstrap(bootstrap, R, sample_frac, type, n_bins) = new(bootstrap, R, sample_frac, type, n_bins)
+    Bootstrap(perform, R, sample_frac, type, n_bins) = new(perform, R, sample_frac, type, n_bins)
 end
 
 mutable struct IntOpt #if you want to specify a termination parameter you have to specify all of them
