@@ -43,7 +43,7 @@ mutable struct Block
 end
 
 mutable struct Bootstrap
-    bootstrap::Bool #true or false
+    perform::Bool #true or false
     R::Int64 #number of replications
     sample_frac::Float64
     type::String #parametric or nonParametric
