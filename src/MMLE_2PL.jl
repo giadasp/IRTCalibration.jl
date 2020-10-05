@@ -22,7 +22,7 @@ function calibrate(mdl::LatentModel)
     Xk = copy(X[:, firstLatent])
     startPars = copy(mdl.estimates.pars)
     startEst = copy(mdl.estimates)
-    if mdl.bootstrap.bootstrap
+    if mdl.bootstrap.perform
         #takes only the first Latent
         (bins, none) = cutR(
             startEst.latent_values[:, firstLatent];
@@ -68,7 +68,7 @@ function calibrate(mdl::LatentModel)
         end
     end
     s = 1
-    if mdl.bootstrap.bootstrap == false
+    if mdl.bootstrap.perform == false
         R = 1
     else
         R = mdl.bootstrap.R
@@ -84,7 +84,7 @@ function calibrate(mdl::LatentModel)
                 nIndex[n] = findall(mdl.dt.design[n, :] .== 1.0)
             end
         end #15ms
-        if mdl.bootstrap.bootstrap
+        if mdl.bootstrap.perform
             mdl.estimates = copy(startEst)
             if mdl.bootstrap.type == "parametric"
                 if mdl.dt.unbalanced
@@ -299,7 +299,7 @@ function calibrate(mdl::LatentModel)
                        s <= mdl.ext_opt.min_max_W[2] &&
                        s >= mdl.ext_opt.min_max_W[1]
                    ) &&
-                   mdl.bootstrap.bootstrap == false# && xGap>0.5 && mdl.bootstrap.bootstrap==false
+                   mdl.bootstrap.perform == false# && xGap>0.5 && mdl.bootstrap.perform==false
                     posterior, newLh = posterior(
                         posterior,
                         lhMat,
@@ -380,7 +380,7 @@ function calibrate(mdl::LatentModel)
                        s <= mdl.ext_opt.min_max_W[2] &&
                        s >= mdl.ext_opt.min_max_W[1]
                    ) &&
-                   mdl.bootstrap.bootstrap == false
+                   mdl.bootstrap.perform == false
                     posterior = posterior_simplified(
                         posterior,
                         newN,
@@ -532,7 +532,7 @@ function calibrate(mdl::LatentModel)
 
         end
 
-        if mdl.bootstrap.bootstrap
+        if mdl.bootstrap.perform
             isample = findall(sum(newDesign, dims = 2) .> 0)
             for p = 1:nTotPar
                 BSPar[p][isample, r+1] .= newPars[p, :]
@@ -549,7 +549,7 @@ function calibrate(mdl::LatentModel)
         end
         println("end of ", r, " bootstrap replication")
     end
-    if mdl.bootstrap.bootstrap
+    if mdl.bootstrap.perform
         JLD2.@save "pars.jld2" BSPar
         JLD2.@save "latent_values.jld2" BSLatentVals
     end
