@@ -534,7 +534,7 @@ function calibrate(mdl::LatentModel)
 
         end
 
-        if mdl.bootstrap.bootstrap
+        if mdl.bootstrap.perform
             isample = findall(sum(new_design, dims = 2) .> 0)
             for p = 1:n_tot_par
                 BSPar[p][isample, r+1] .= new_pars[p, :]
