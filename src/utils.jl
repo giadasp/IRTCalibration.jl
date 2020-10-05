@@ -32,7 +32,7 @@ function likelihood(
     likelihood::Matrix{Float64},
     N::Int64,
     K::Int64,
-    iIndex::Vector{Vector{Int64}},
+    i_index::Vector{Vector{Int64}},
     r::Matrix{Float64},
     phi::Matrix{Float64},
 )
@@ -42,7 +42,7 @@ function likelihood(
     for n = 1:N
         for k = 1:K
             post_k = one(Float64)
-            for i in iIndex[n]
+            for i in i_index[n]
                 if r[i, n] > 0
                     post_k *= ephione[k, i]
                 else
@@ -55,12 +55,12 @@ function likelihood(
     return likelihood::Matrix{Float64}
 end
 
-function posterior(
+function compute_posterior(
     post::Matrix{Float64},
-    lh::Matrix{Float64},
+    likelihood::Matrix{Float64},
     N::Int64,
     K::Int64,
-    iIndex::Vector{Vector{Int64}},
+    i_index::Vector{Vector{Int64}},
     r::Matrix{Float64},
     Wk::Vector{Float64},
     phi::Matrix{Float64},
@@ -72,7 +72,7 @@ function posterior(
     for n = 1:N
         for k = 1:K
             post_k = one(Float64)
-            for i in iIndex[n]
+            for i in i_index[n]
                 if r[i, n] > 0
                     post_k *= ephione[k, i]
                 else
@@ -82,11 +82,11 @@ function posterior(
             post_n[k] = copy(post_k)
         end
         # post_n=pmap(1:K) do k
-        # 	prod(pmap(iIndex[n]) do i
+        # 	prod(pmap(i_index[n]) do i
         # 		(ephi[i,k]^r[i,n])/(1+ephi[i,k])
         # 	end;)
         # end;
-        lh[n, :] = copy(post_n)
+        likelihood[n, :] = copy(post_n)
         post_n = post_n .* Wk
         normalizer = sum(post_n)
         if normalizer > typemin(Float64)
@@ -94,14 +94,14 @@ function posterior(
         end
         post[n, :] = copy(post_n)
     end
-    return post::Matrix{Float64}, lh::Matrix{Float64}
+    return post::Matrix{Float64}, likelihood::Matrix{Float64}
 end
 
 function posterior_simplified(
     post::Matrix{Float64},
     N::Int64,
     K::Int64,
-    iIndex::Vector{Vector{Int64}},
+    i_index::Vector{Vector{Int64}},
     r::Matrix{Float64},
     Wk::Vector{Float64},
     phi::Matrix{Float64},
@@ -112,7 +112,7 @@ function posterior_simplified(
     for n = 1:N
         for k = 1:K
             post_k = one(Float64)
-            for i in iIndex[n]
+            for i in i_index[n]
                 if r[i, n] > 0
                     post_k *= ephione[k, i]
                 else

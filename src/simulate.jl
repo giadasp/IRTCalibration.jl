@@ -155,14 +155,14 @@ function generate_responses(
     end
     # if method=="MIP"
     # 	for n=1:N
-    # 		iIndex=iindex[n]
-    # 		p=[c[i]+((1-c[i])*(1 / (1 + exp_c(-a[i]*(θ[n]-b[i]))))) for i in iIndex]
+    # 		i_index=iindex[n]
+    # 		p=[c[i]+((1-c[i])*(1 / (1 + exp_c(-a[i]*(θ[n]-b[i]))))) for i in i_index]
     # 		p[p.==0].=0.00001
     # 		m=Model(solver=CplexSolver(CPX_PARAM_PREIND=0,CPX_PARAM_MIPEMPHASIS=one(Float64)))
-    # 		@variable(m, x[i=one(Float64):size(iIndex,1)], Bin)
-    # 		@objective(m, Max, sum((x[i]*log_c(p[i]) + ((f[i] - x[i]) * log_c(1-p[i]))) for  i=one(Float64):size(iIndex,1)))
-    # 		@constraint(m, sum(x[i] for i=one(Float64):size(iIndex,1))-sum(p) <=+1)
-    # 		@constraint(m, sum(x[i] for i=one(Float64):size(iIndex,1))-sum(p) >=-1)
+    # 		@variable(m, x[i=one(Float64):size(i_index,1)], Bin)
+    # 		@objective(m, Max, sum((x[i]*log_c(p[i]) + ((f[i] - x[i]) * log_c(1-p[i]))) for  i=one(Float64):size(i_index,1)))
+    # 		@constraint(m, sum(x[i] for i=one(Float64):size(i_index,1))-sum(p) <=+1)
+    # 		@constraint(m, sum(x[i] for i=one(Float64):size(i_index,1))-sum(p) >=-1)
     #
     # 		#@constraint(m, [n=one(Float64):(size(nindex[i],1)-1)], x[n] <= x[n+1] )
     # 		solve(m)
@@ -183,17 +183,17 @@ function generate_responses(
     if method == "cumItemsPattern"
         for n = 1:N#4+
             println("start person ", n)
-            iIndex = iindex[n]
-            iIndex = size(iIndex, 1)
-            p2 = pr[iIndex, n]
+            i_index = iindex[n]
+            i_index = size(i_index, 1)
+            p2 = pr[i_index, n]
             p2 = hcat((1 .- p2), p2)#2
             patterns = Vector{Vector{Int64}}(undef, 1)
             n_pattern = Vector{Int64}(undef, 1)
             for r = one(Float64):1000
-                respn = Vector{Int64}(undef, iIndex)
-                unif = rand(Uniform(0, 1), iIndex)#5
-                samplei = sample(collect(1:iIndex), iIndex, replace = false)
-                for i = one(Float64):iIndex
+                respn = Vector{Int64}(undef, i_index)
+                unif = rand(Uniform(0, 1), i_index)#5
+                samplei = sample(collect(1:i_index), i_index, replace = false)
+                for i = one(Float64):i_index
                     csum = p2[samplei[i], 1]#8
                     cat = 0#9
                     while csum < unif[samplei[i]]
@@ -228,22 +228,22 @@ function generate_responses(
             n_patterns = size(patterns, 1)
             prob_patterns = n_pattern ./ 1000
             println(prob_patterns)
-            resp[iIndex, n] .= sample(patterns, pweights(prob_patterns), 1)
+            resp[i_index, n] .= sample(patterns, pweights(prob_patterns), 1)
             println("end person ", n)
         end
     end
     if method == "classicUniformPattern"
         for n = 1:N#4+
             println("start person ", n)
-            iIndex = iindex[n]
-            iIndex = size(iIndex, 1)
+            i_index = iindex[n]
+            i_index = size(i_index, 1)
             patterns = Vector{Vector{Int64}}(undef, 1)
             n_pattern = Vector{Int64}(undef, 1)
             for r = one(Float64):1000
-                respn = Vector{Int64}(undef, iIndex)
-                unif = rand(Uniform(0, 1), iIndex)#5
-                samplei = sample(collect(1:iIndex), iIndex, replace = false)
-                for i = one(Float64):iIndex#7
+                respn = Vector{Int64}(undef, i_index)
+                unif = rand(Uniform(0, 1), i_index)#5
+                samplei = sample(collect(1:i_index), i_index, replace = false)
+                for i = one(Float64):i_index#7
                     if unif[samplei[i]] < p[samplei[i], n]
                         respn[i] = one(Float64)
                     else
@@ -271,7 +271,7 @@ function generate_responses(
             end
             n_patterns = size(patterns, 1)
             prob_patterns = n_pattern ./ 1000
-            resp[iIndex, n] .= sample(patterns, pweights(prob_patterns), 1)
+            resp[i_index, n] .= sample(patterns, pweights(prob_patterns), 1)
             println("end person ", n)
         end
 

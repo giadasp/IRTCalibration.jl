@@ -49,25 +49,25 @@ function subset_data(
 ) #method= Booklet(subset=Scalar) or Students(subset=array), su
     N = size(dt.responses, 1)
     subset = sort(subset)
-    newResponses = dt.responses[:, subset]
+    new_responses = dt.responses[:, subset]
     newDesign = dt.design[:, subset]
     est.pars = est.pars[:, findall(sum(newDesign, dims = 2) .>= 1)]
     est.latent_values = est.latent_values[subset, :]
-    newI, newN = size(newResponses)
+    newI, new_N = size(new_responses)
     if size(sd.pars, 1) > 0
         newSd = sd
         newSd.pars = sd.pars[:, findall(sum(newDesign, dims = 2) .>= 1)]
         newSd.latent_values = sd.latent_values[subset, :]
-        return newN::Int64,
+        return new_N::Int64,
         newI::Int64,
-        newResponses::Matrix{Float64},
+        new_responses::Matrix{Float64},
         newDesign::Matrix{Float64},
         est::Block,
         newSd::Block
     else
-        return newN::Int64,
+        return new_N::Int64,
         newI::Int64,
-        newResponses::Matrix{Float64},
+        new_responses::Matrix{Float64},
         newDesign::Matrix{Float64},
         est::Block
     end

@@ -56,11 +56,11 @@ end
 #     return pars_start::Matrix{Float64}
 # end
 
-function maxLHMMLE(
-    parsStart::Matrix{Float64},
+function max_LH_MMLE(
+    pars::Matrix{Float64},
     phi::Matrix{Float64},
     posterior::Matrix{Float64},
-    iIndex::Vector{Vector{Int64}},
+    i_index::Vector{Vector{Int64}},
     design::Matrix{Float64},
     X::Matrix{Float64},
     Wk::Vector{Float64},
@@ -68,12 +68,12 @@ function maxLHMMLE(
     int_opt::IntOpt,
     bounds::Bounds,
 )
-    n_items = size(parsStart, 2)
-    N = size(iIndex, 1)
+    n_items = size(pars, 2)
+    N = size(i_index, 1)
     K = size(X, 1)
     sumpk = zeros(Float64, K, n_items)
     r1 = similar(sumpk)
-    posterior = posterior_simplified(posterior, N, K, iIndex, responses, Wk, phi)
+    posterior = posterior_simplified(posterior, N, K, i_index, responses, Wk, phi)
     LinearAlgebra.BLAS.gemm!(
         'T',
         'T',
@@ -101,13 +101,13 @@ function maxLHMMLE(
     opt.ftol_rel = int_opt.f_tol_rel
     #opt.maxeval=50
     Distributed.@sync Distributed.@distributed for i = 1:n_items
-        pars_i = max_i(X, sumpk[:, i], r1[:, i], parsStart[:, i], opt)
+        pars_i = max_i(X, sumpk[:, i], r1[:, i], pars[:, i], opt)
         if n_par == 1
-            parsStart[2, i] = copy(pars_i)
+            pars[2, i] = copy(pars_i)
         else
-            parsStart[:, i] = copy(pars_i)
+            pars[:, i] = copy(pars_i)
         end
     end
-    LinearAlgebra.BLAS.gemm!('N', 'N', one(Float64), X, parsStart, zero(Float64), phi)# phi=New_pars*X1', if A'*B then 'T', 'N'
-    return parsStart::Matrix{Float64}, phi::Matrix{Float64}
+    LinearAlgebra.BLAS.gemm!('N', 'N', one(Float64), X, pars, zero(Float64), phi)# phi=New_pars*X1', if A'*B then 'T', 'N'
+    return pars::Matrix{Float64}, phi::Matrix{Float64}
 end

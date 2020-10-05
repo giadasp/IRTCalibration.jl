@@ -76,12 +76,12 @@ function calibrate(mdl::LatentModel)
     for r = 1:R
         Wk = copy(W[:, firstLatent])
         Xk = copy(X[:, firstLatent])
-        nIndex = Array{Array{Int64,1},1}(undef, n_items)
-        iIndex = Array{Array{Int64,1},1}(undef, N)
+        n_index = Array{Array{Int64,1},1}(undef, n_items)
+        i_index = Array{Array{Int64,1},1}(undef, N)
         for n = 1:N
-            iIndex[n] = findall(mdl.dt.design[:, n] .== 1.0)
+            i_index[n] = findall(mdl.dt.design[:, n] .== 1.0)
             if n <= n_items
-                nIndex[n] = findall(mdl.dt.design[n, :] .== 1.0)
+                n_index[n] = findall(mdl.dt.design[n, :] .== 1.0)
             end
         end #15ms
         if mdl.bootstrap.perform
@@ -89,7 +89,7 @@ function calibrate(mdl::LatentModel)
             if mdl.bootstrap.type == "parametric"
                 if mdl.dt.unbalanced
                     #nsample=sample(collect(1:N),StatsBase.ProbabilityWeights(pθ), Int(floor(mdl.bootstrap.sample_frac*N)), replace=true)
-                    #while size(unique(vcat([iIndex[n] for n in nsample]...)),1)<n_items
+                    #while size(unique(vcat([i_index[n] for n in nsample]...)),1)<n_items
                     #nsample=rand(Distributions.DiscreteNonParametric(collect(1:N), pθ),Int(floor(mdl.sample_frac*N)))
                     #	nsample=sample(collect(1:N),StatsBase.ProbabilityWeights(pθ), Int(floor(mdl.bootstrap.sample_frac*N)), replace=true)
                     #end
@@ -109,7 +109,7 @@ function calibrate(mdl::LatentModel)
                         end
                         nsample[n] = sample(findall(bins .== ns))
                     end
-                    while size(unique(vcat([iIndex[n] for n in nsample]...)), 1) < n_items
+                    while size(unique(vcat([i_index[n] for n in nsample]...)), 1) < n_items
                         nsample = rand(
                             Distributions.DiscreteNonParametric(collect(1:K), Wk),
                             Int(floor(mdl.bootstrap.sample_frac * N)),
@@ -161,7 +161,7 @@ function calibrate(mdl::LatentModel)
                         Int(ceil(mdl.bootstrap.sample_frac * N)),
                         replace = true,
                     )
-                    while size(unique(vcat([iIndex[n] for n in nsample]...)), 1) < n_items
+                    while size(unique(vcat([i_index[n] for n in nsample]...)), 1) < n_items
                         nsample = sample(
                             collect(1:N),
                             Int(floor(mdl.bootstrap.sample_frac * N)),
@@ -182,28 +182,28 @@ function calibrate(mdl::LatentModel)
                 end
             end
             if size(mdl.simulated_data.pars, 1) > 0
-                (newN, newI, newResponses, newDesign, newEst, newSd) =
+                (new_N, newI, new_responses, newDesign, newEst, newSd) =
                     subset_data(mdl.dt, nsample, T, n, mdl.estimates, mdl.simulated_data)
             else
-                (newN, newI, newResponses, newDesign, newEst) =
+                (new_N, newI, new_responses, newDesign, newEst) =
                     subset_data(mdl.dt, nsample, T, n, mdl.estimates, mdl.simulated_data)
             end
         else #no bootstrap
             if size(mdl.simulated_data.pars, 1) > 0
-                (newN, newI, newResponses, newDesign, newEst, newSd) =
+                (new_N, newI, new_responses, newDesign, newEst, newSd) =
                     (N, n_items, mdl.dt.responses, mdl.dt.design, mdl.estimates, mdl.simulated_data)
             else
-                (newN, newI, newResponses, newDesign, newEst) =
+                (new_N, newI, new_responses, newDesign, newEst) =
                     (N, n_items, mdl.dt.responses, mdl.dt.design, mdl.estimates)
             end
         end
         #index of missings
-        nIndex = Array{Array{Int64,1},1}(undef, newI)
-        iIndex = Array{Array{Int64,1},1}(undef, newN)
-        for n = 1:newN
-            iIndex[n] = findall(newDesign[:, n] .== 1.0)
+        n_index = Array{Array{Int64,1},1}(undef, newI)
+        i_index = Array{Array{Int64,1},1}(undef, new_N)
+        for n = 1:new_N
+            i_index[n] = findall(newDesign[:, n] .== 1.0)
             if n <= newI
-                nIndex[n] = findall(newDesign[n, :] .== 1.0)
+                n_index[n] = findall(newDesign[n, :] .== 1.0)
             end
         end
         ########################################################################
@@ -216,7 +216,7 @@ function calibrate(mdl::LatentModel)
         # oldPars[2]=copy(newPars)
         xGap = Inf
         xGapOld = ones(Float64, 7) .* Inf
-        newLh = -Inf
+        new_likelihood = -Inf
         oldLh = ones(Float64, 3) .* (-Inf)
         oldLatentVals = copy(newEst.latent_values)
         newLatentVals = copy(oldLatentVals)
@@ -233,10 +233,10 @@ function calibrate(mdl::LatentModel)
         endOfWhile = 0
         startTime = time()
         phi = X * newPars #K x I
-        posterior = zeros(Float64, newN, K)
-        lhMat = similar(posterior)
-        oneoverN = fill(1 / newN, newN)
-        newLatentVals = zeros(newN, n_latent + 1)
+        posterior = zeros(Float64, new_N, K)
+        likelihood_matrix = similar(posterior)
+        oneoverN = fill(1 / new_N, new_N)
+        newLatentVals = zeros(new_N, n_latent + 1)
         #r=zeros(Float64,n_par,newI)
         println(newPars[1, 1])
         println(Xk[30:40])
@@ -246,13 +246,13 @@ function calibrate(mdl::LatentModel)
             ####					ACCELLERATE
             ################################################################
             #if s>1
-            # 	if exp(oldLh[1]-newLh)>0.1
+            # 	if exp(oldLh[1]-new_likelihood)>0.1
             # 		d2=oldPars[1]-oldPars[2]
             # 		d1=newPars-oldPars[1]
             # 		d1d2=d1-d2
             # 		ratio=sqrt(sum(d1.^2) / sum(d1d2.^2))
             # 		accel=clamp(1-ratio,-5.0,Inf)
-            # 		newPars=((1-accel).*newPars)+(accel.*oldPars[1])#+(1-exp(newLh-oldLh[1])).*newPars
+            # 		newPars=((1-accel).*newPars)+(accel.*oldPars[1])#+(1-exp(new_likelihood-oldLh[1])).*newPars
             # 		println("accellerate!")
             # 		LinearAlgebra.BLAS.gemm!('N', 'N', one(Float64), X, newPars, zero(Float64), phi)# phi=New_pars*X1', if A'*B then 'T', 'N'
             ####ADAGRAD
@@ -271,20 +271,20 @@ function calibrate(mdl::LatentModel)
                 ####					MStep
                 ################################################################
                 #before_time=time()
-                newPars, phi = maxLHMMLE(
+                newPars, phi = max_LH_MMLE(
                     newPars,
                     phi,
                     posterior,
-                    iIndex,
+                    i_index,
                     newDesign,
                     X,
                     Wk,
-                    newResponses,
+                    new_responses,
                     mdl.int_opt,
                     mdl.bounds,
                 )
-                lhMat = likelihood(lhMat, newN, K, iIndex, newResponses, phi)
-                newLh = sum(log_c.(LinearAlgebra.BLAS.gemv('N', one(Float64), lhMat, Wk)))
+                likelihood_matrix = likelihood(likelihood_matrix, new_N, K, i_index, new_responses, phi)
+                new_likelihood = sum(log_c.(LinearAlgebra.BLAS.gemv('N', one(Float64), likelihood_matrix, Wk)))
                 #println("time elapsed for Mstep IntOpt ",time()-before_time)
                 ####################################################################
             else
@@ -293,20 +293,23 @@ function calibrate(mdl::LatentModel)
                 ################################################################
                 ####					RESCALE
                 ################################################################
-                if mdl.ext_opt.denType == "EH" &&
-                   (
-                       s % mdl.ext_opt.int_W == 0 &&
-                       s <= mdl.ext_opt.min_max_W[2] &&
-                       s >= mdl.ext_opt.min_max_W[1]
-                   ) &&
-                   mdl.bootstrap.perform == false# && xGap>0.5 && mdl.bootstrap.perform==false
-                    posterior, newLh = posterior(
+                println(typeof(likelihood_matrix))
+                println(typeof(new_responses))
+                println(typeof(phi))
+
+                if mdl.ext_opt.denType == "EH" && (
+                    s % mdl.ext_opt.int_W == 0 &&
+                    s <= mdl.ext_opt.min_max_W[2] &&
+                    s >= mdl.ext_opt.min_max_W[1]
+                   ) && mdl.bootstrap.perform == false# && xGap>0.5 && mdl.bootstrap.perform==false
+                    
+                   posterior, new_likelihood = compute_posterior(
                         posterior,
-                        lhMat,
-                        newN,
+                        likelihood_matrix,
+                        new_N,
                         K,
-                        iIndex,
-                        newResponses,
+                        i_index,
+                        new_responses,
                         Wk,
                         phi,
                     )
@@ -322,8 +325,8 @@ function calibrate(mdl::LatentModel)
                     Xk2, Wk2 = my_rescale(Xk, Wk, mdl.estimates.latents[1].metric, observed)
                     Wk = cubic_spline_int(Xk, Xk2, Wk2)
                     #end
-                    newLh =
-                        sum(log_c.(LinearAlgebra.BLAS.gemv('N', one(Float64), lhMat, Wk)))
+                    new_likelihood =
+                        sum(log_c.(LinearAlgebra.BLAS.gemv('N', one(Float64), likelihood_matrix, Wk)))
                 elseif typeof(mdl.ext_opt.denType) == Distributions.Distribution
                     if s >= 1
                         for l = 1:n_latent
@@ -351,7 +354,7 @@ function calibrate(mdl::LatentModel)
             #lh
             oldLh[3] = oldLh[2]
             oldLh[2] = oldLh[1]
-            oldLh[1] = copy(newLh)
+            oldLh[1] = copy(new_likelihood)
             #pars
             deltaPars = (newPars - oldPars[1]) ./ oldPars[1]
             oldPars[2] = oldPars[1]
@@ -383,10 +386,10 @@ function calibrate(mdl::LatentModel)
                    mdl.bootstrap.perform == false
                     posterior = posterior_simplified(
                         posterior,
-                        newN,
+                        new_N,
                         K,
-                        iIndex,
-                        newResponses,
+                        i_index,
+                        new_responses,
                         Wk,
                         phi,
                     )
@@ -402,8 +405,8 @@ function calibrate(mdl::LatentModel)
                     Xk2, Wk2 = my_rescale(Xk, Wk, mdl.estimates.latents[1].metric, observed)
                     Wk = cubic_spline_int(Xk, Xk2, Wk2)
                     #end
-                    newLh =
-                        sum(log_c.(LinearAlgebra.BLAS.gemv('N', one(Float64), lhMat, Wk)))
+                    new_likelihood =
+                        sum(log_c.(LinearAlgebra.BLAS.gemv('N', one(Float64), likelihood_matrix, Wk)))
                 elseif typeof(mdl.ext_opt.denType) == Distributions.Distribution
                     if s >= 1
                         for l = 1:n_latent
@@ -428,20 +431,20 @@ function calibrate(mdl::LatentModel)
                 ####					MStep
                 ################################################################
                 before_time = time()
-                newPars, phi = maxLHMMLE(
+                newPars, phi = max_LH_MMLE(
                     newPars,
                     phi,
                     posterior,
-                    iIndex,
+                    i_index,
                     newDesign,
                     X,
                     Wk,
-                    newResponses,
+                    new_responses,
                     mdl.int_opt,
                     mdl.bounds,
                 )
-                lhMat = likelihood(lhMat, newN, K, iIndex, newResponses, phi)
-                newLh = sum(log_c.(LinearAlgebra.BLAS.gemv('N', one(Float64), lhMat, Wk)))
+                likelihood_matrix = likelihood(likelihood_matrix, new_N, K, i_index, new_responses, phi)
+                new_likelihood = sum(log_c.(LinearAlgebra.BLAS.gemv('N', one(Float64), likelihood_matrix, Wk)))
                 #println("time elapsed for Mstep IntOpt",time()-before_time)
 
                 ################################################################
@@ -452,7 +455,7 @@ function calibrate(mdl::LatentModel)
             #println("RMSE for θ is ",RMSE(newLatentVals,newSimθ))
             # end
             println("end of iteration  #", s)
-            println("newlikelihood is ", newLh)
+            println("newlikelihood is ", new_likelihood)
 
             newTime = time()
             ####################################################################
@@ -480,7 +483,7 @@ function calibrate(mdl::LatentModel)
                 )
                 endOfWhile = 1
             end
-            fGap = abs(newLh - oldLh[1]) / oldLh[1]
+            fGap = abs(new_likelihood - oldLh[1]) / oldLh[1]
             if fGap < mdl.ext_opt.l_tol_rel && fGap >= 0
                 println(
                     "f ToL reached after ",
@@ -507,7 +510,7 @@ function calibrate(mdl::LatentModel)
                     endOfWhile = 1
                 else
                     if s > 20
-                        if !(newLh > oldLh[1] && oldLh[1] > oldLh[2] && oldLh[2] > oldLh[3])
+                        if !(new_likelihood > oldLh[1] && oldLh[1] > oldLh[2] && oldLh[2] > oldLh[3])
                             if xGap < 0.1 &&
                                xGapOld[1] == bestxGap &&
                                xGapOld[1] == xGapOld[2] &&
@@ -524,7 +527,7 @@ function calibrate(mdl::LatentModel)
             end
             if endOfWhile == 1
                 posterior =
-                    posterior_simplified(posterior, newN, K, iIndex, newResponses, Wk, phi)
+                    posterior_simplified(posterior, new_N, K, i_index, new_responses, Wk, phi)
                 newLatentVals = (posterior * X) ./ (posterior * ones(K, n_latent + 1))
             end
             s = s + 1
