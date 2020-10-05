@@ -23,7 +23,7 @@ function calibrate(mdl::LatentModel)
     Xk = copy(X[:, first_latent])
     starting_pars = copy(mdl.estimates.pars)
     starting_estimates = copy(mdl.estimates)
-    if mdl.bootstrap.bootstrap
+    if mdl.bootstrap.perform
         #takes only the first Latent
         (bins, none) = cutR(
             starting_estimates.latent_values[:, first_latent];
@@ -69,7 +69,7 @@ function calibrate(mdl::LatentModel)
         end
     end
     s = 1
-    if mdl.bootstrap.bootstrap == false
+    if mdl.bootstrap.perform == false
         R = 1
     else
         R = mdl.bootstrap.R
@@ -85,7 +85,7 @@ function calibrate(mdl::LatentModel)
                 n_index[n] = findall(mdl.dt.design[n, :] .== 1.0)
             end
         end #15ms
-        if mdl.bootstrap.bootstrap
+        if mdl.bootstrap.perform
             mdl.estimates = copy(starting_estimates)
             if mdl.bootstrap.type == "parametric"
                 if mdl.dt.unbalanced
@@ -300,7 +300,7 @@ function calibrate(mdl::LatentModel)
                        s <= mdl.ext_opt.min_max_W[2] &&
                        s >= mdl.ext_opt.min_max_W[1]
                    ) &&
-                   mdl.bootstrap.bootstrap == false# && xGap>0.5 && mdl.bootstrap.bootstrap==false
+                   mdl.bootstrap.perform == false# && xGap>0.5 && mdl.bootstrap.perform==false
                     posterior, new_likelihood = posterior(
                         posterior,
                         likelihood_matrix,
@@ -382,7 +382,7 @@ function calibrate(mdl::LatentModel)
                        s <= mdl.ext_opt.min_max_W[2] &&
                        s >= mdl.ext_opt.min_max_W[1]
                    ) &&
-                   mdl.bootstrap.bootstrap == false
+                   mdl.bootstrap.perform == false
                     posterior = posterior_simplified(
                         posterior,
                         new_N,
@@ -551,7 +551,7 @@ function calibrate(mdl::LatentModel)
         end
         println("end of ", r, " bootstrap replication")
     end
-    if mdl.bootstrap.bootstrap
+    if mdl.bootstrap.perform
         JLD2.@save "pars.jld2" BSPar
         JLD2.@save "latent_values.jld2" bootstrap_latent_values
     end
