@@ -1,7 +1,7 @@
 name = "IRTCalibration"
 uuid = "d5be0d26-6c5b-4de9-8520-645e180091ad"
 authors = ["Giada Spaccapanico Proietti"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
