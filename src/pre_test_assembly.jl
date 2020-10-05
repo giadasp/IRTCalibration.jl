@@ -47,7 +47,7 @@ function pre_test_CPLEX(
     Design = (JuMP.getvalue(x))
     return Design
 end
-function _overlap_pairs(T_pt, overlap_matrix)
+function overlap_pairs(T_pt, overlap_matrix)
     n_couples = binomial(T_pt, 2)
     couples = Vector{Vector{Int64}}(undef, n_couples)
     p = 1
