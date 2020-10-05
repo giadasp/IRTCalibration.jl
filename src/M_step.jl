@@ -57,11 +57,11 @@ end
 #     return pars_start::Matrix{Float64}
 # end
 
-function maxLHMMLE(
+function max_LH_MMLE(
     parsStart::Matrix{Float64},
     phi::Matrix{Float64},
     posterior::Matrix{Float64},
-    iIndex::Vector{Vector{Int64}},
+    i_index::Vector{Vector{Int64}},
     design::Matrix{Float64},
     X::Matrix{Float64},
     Wk::Vector{Float64},
@@ -70,11 +70,11 @@ function maxLHMMLE(
     bounds::Bounds,
 )
     n_items = size(parsStart, 2)
-    N = size(iIndex, 1)
+    N = size(i_index, 1)
     K = size(X, 1)
     sumpk = zeros(Float64, K, n_items)
     r1 = similar(sumpk)
-    posterior = posterior_simplified(posterior, N, K, n_items, iIndex, responses, Wk, phi)
+    posterior = posterior_simplified(posterior, N, K, n_items, i_index, responses, Wk, phi)
     LinearAlgebra.BLAS.gemm!(
         'T',
         'T',

@@ -3,8 +3,8 @@ function cutR(
     start = "minimum",
     stop = "maximum",
     n_bins = 2,
-    returnBreaks = true,
-    returnMidPts = false,
+    return_breaks = true,
+    return_mid_points = false,
 )
     if (start == "minimum")
         start = minimum(x)
@@ -29,10 +29,10 @@ function cutR(
             end
         end
     end
-    if (returnBreaks == true || returnMidPts == true)
-        if returnMidPts == false
+    if (return_breaks == true || return_mid_points == true)
+        if return_mid_points == false
             return (Int.(y), breaks)
-        elseif returnBreaks == false
+        elseif return_breaks == false
             return (Int.(y), midPts)
         else
             return (Int.(y), breaks, midPts)
@@ -44,33 +44,31 @@ end
 function subset_data(
     dt::Data,
     subset::Vector{Int64},
-    NumberOfTests::Int64,
-    LengthOfTests::Int64,
     est::Block,
     sd::Block,
-) #method= Booklet(subset=Scalar) or Students(subset=array), su
+) #method= Booklet(subset=Scalar) or Students(subset=array)
     N = size(dt.responses, 1)
     subset = sort(subset)
-    newResponses = dt.responses[:, subset]
-    newDesign = dt.design[:, subset]
-    est.pars = est.pars[:, findall(sum(newDesign, dims = 2) .>= 1)]
+    new_responses = dt.responses[:, subset]
+    new_design = dt.design[:, subset]
+    est.pars = est.pars[:, findall(sum(new_design, dims = 2) .>= 1)]
     est.latent_values = est.latent_values[subset, :]
-    newI, newN = size(newResponses)
+    new_n_items, new_N = size(new_responses)
     if size(sd.pars, 1) > 0
-        newSd = sd
-        newSd.pars = sd.pars[:, findall(sum(newDesign, dims = 2) .>= 1)]
-        newSd.latent_values = sd.latent_values[subset, :]
-        return newN::Int64,
-        newI::Int64,
-        newResponses::Matrix{Float64},
-        newDesign::Matrix{Float64},
+        new_simulated_data = sd
+        new_simulated_data.pars = sd.pars[:, findall(sum(new_design, dims = 2) .>= 1)]
+        new_simulated_data.latent_values = sd.latent_values[subset, :]
+        return new_N::Int64,
+        new_n_items::Int64,
+        new_responses::Matrix{Float64},
+        new_design::Matrix{Float64},
         est::Block,
-        newSd::Block
+        new_simulated_data::Block
     else
-        return newN::Int64,
-        newI::Int64,
-        newResponses::Matrix{Float64},
-        newDesign::Matrix{Float64},
+        return new_N::Int64,
+        new_n_items::Int64,
+        new_responses::Matrix{Float64},
+        new_design::Matrix{Float64},
         est::Block
     end
 end

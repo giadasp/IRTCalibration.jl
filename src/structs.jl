@@ -63,7 +63,7 @@ end
 
 mutable struct ExtOpt #if you want to specify a termination parameter you have to specify all of them
     method::String# =optima weighted sum #can be: ["OWS" , "WLE" , "JML"]
-    denType::Union{Distributions.Distribution,String}
+    den_type::Union{Distributions.Distribution,String}
     K::Int64 #theta points
     int_W::Int64 #can be: ["1" , "1/s"  , "1/sqrt(s)"]
     min_max_W::Vector{Int64}
@@ -73,8 +73,8 @@ mutable struct ExtOpt #if you want to specify a termination parameter you have t
     time_limit::Int64
     max_iter::Int64
     ExtOpt() = new("OWS", Distributions.Normal(0, 1), 21, 3, [9, 15], "theta", 1e-20, 1e-5, 1000, 1000)
-    ExtOpt(method, denType, K, int_W, min_max_W, first, l_tol_rel, x_tol_rel, time_limit, max_iter) =
-        new(method, denType, K, int_W, min_max_W, first, l_tol_rel, x_tol_rel, time_limit, max_iter)
+    ExtOpt(method, den_type, K, int_W, min_max_W, first, l_tol_rel, x_tol_rel, time_limit, max_iter) =
+        new(method, den_type, K, int_W, min_max_W, first, l_tol_rel, x_tol_rel, time_limit, max_iter)
 end
 
 mutable struct Bounds

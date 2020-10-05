@@ -27,5 +27,5 @@ function save_latent_values(latent_values::Matrix{Float64}, folder::String)
     for l = 1:n_latent
         DataFrames.insertcols!(simLatent, l + 1, Symbol(latNames[l]) => latent_values[:, l])
     end
-    CSV.write(string(folder, "/simLatentVals.csv"), simLatent)
+    CSV.write(string(folder, "/simulated_latent_values.csv"), simLatent)
 end

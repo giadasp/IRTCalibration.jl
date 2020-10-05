@@ -11,32 +11,32 @@ end
 
 function simulate_data(
     irt::IRT,
-    latentMetric::Vector{Vector{Float64}},
-    latentDist::Vector{<:Distributions.Distribution},
-    parsDist::Vector{<:Distributions.Distribution},
+    latent_metric::Vector{Vector{Float64}},
+    latent_dist::Vector{<:Distributions.Distribution},
+    pars_dist::Vector{<:Distributions.Distribution},
 )
     simPars = Matrix{Float64}(undef, irt.n_latent + 1, irt.n_items)
-    simLatentVector = Vector{Latent}(undef, irt.n_latent)
-    simLatentVals = Matrix{Float64}(undef, irt.N, irt.n_latent + 1)
-    simLatentVals[:, 1] = ones(irt.N)
+    simulated_latent_vector = Vector{Latent}(undef, irt.n_latent)
+    simulated_latent_values = Matrix{Float64}(undef, irt.N, irt.n_latent + 1)
+    simulated_latent_values[:, 1] = ones(irt.N)
     if irt.n_par > 1 #intercept
-        simPars[1, :] = rand(parsDist[1], irt.n_items) #easiness
+        simPars[1, :] = rand(pars_dist[1], irt.n_items) #easiness
         for l = 1:(irt.n_latent) #discriminations
-            simPars[l+1, :] = rand(parsDist[l+min(irt.n_par - 1)], irt.n_items)
-            simLatentVector[l] = Latent(latentDist[l], latentMetric[l])
-            simLatentVals[:, l+1] = rand(latentDist[l], irt.N)
+            simPars[l+1, :] = rand(pars_dist[l+min(irt.n_par - 1)], irt.n_items)
+            simulated_latent_vector[l] = Latent(latent_dist[l], latent_metric[l])
+            simulated_latent_values[:, l+1] = rand(latent_dist[l], irt.N)
         end
     else #no easiness
         for l = 1:(irt.n_latent) #discriminations
             simPars[l+1, :] = ones(irt.n_items)
-            simLatentVector[l] = Latent(latentDist[l], latentMetric[l])
-            simLatentVals[:, l+1] = rand(latentDist[l], irt.N)
+            simulated_latent_vector[l] = Latent(latent_dist[l], latent_metric[l])
+            simulated_latent_values[:, l+1] = rand(latent_dist[l], irt.N)
         end
     end
     if irt.n_par > 2 #guessing
-        simPars[end, :] = ones(parsDist[end], irt.n_items) .* 0.5
+        simPars[end, :] = ones(pars_dist[end], irt.n_items) .* 0.5
     end
-    return Block(simPars, simLatentVals, simLatentVector)
+    return Block(simPars, simulated_latent_values, simulated_latent_vector)
 end
 
 function generate_responses(
@@ -68,7 +68,7 @@ function generate_responses(
             while gapScore >= 2
                 p2 = pr[i, :]
                 p2 = hcat((1 .- p2), p2)#2
-                unif = rand(Uniform(0, 1), N)#5
+                unif = rand(Distributions.Uniform(0, 1), N)#5
                 n = one(Float64)#6
                 while n <= N#7
                     csum = p2[n, 1]#8
@@ -88,7 +88,7 @@ function generate_responses(
                         n = n + 1
                     end
                 end
-                gapScore = abs(sum(resp[i, :]) - sum(p[i, n] for n in nindex[i]))
+                gapScore = abs(sum(resp[i, :]) - sum(p2[i, n] for n in nindex[i]))
             end
         end
     end
@@ -96,9 +96,9 @@ function generate_responses(
         @fastmath @inbounds for n = 1:N#4
             #gapScore=3
             #while gapScore>=2
-            p2 = p[:, n]
+            p2 = pr[:, n]
             p2 = hcat((1 .- p2), p2)#2
-            unif = rand(Uniform(0, 1), n_items)#5
+            unif = rand(Distributions.Uniform(0, 1), n_items)#5
             samplei = sample(collect(1:n_items), n_items, replace = false)
             i = one(Float64)#6
             while i <= n_items#7
@@ -155,14 +155,14 @@ function generate_responses(
     end
     # if method=="MIP"
     # 	for n=1:N
-    # 		iIndex=iindex[n]
-    # 		p=[c[i]+((1-c[i])*(1 / (1 + exp_c(-a[i]*(θ[n]-b[i]))))) for i in iIndex]
+    # 		i_index=iindex[n]
+    # 		p=[c[i]+((1-c[i])*(1 / (1 + exp_c(-a[i]*(θ[n]-b[i]))))) for i in i_index]
     # 		p[p.==0].=0.00001
     # 		m=Model(solver=CplexSolver(CPX_PARAM_PREIND=0,CPX_PARAM_MIPEMPHASIS=one(Float64)))
-    # 		@variable(m, x[i=one(Float64):size(iIndex,1)], Bin)
-    # 		@objective(m, Max, sum((x[i]*log_c(p[i]) + ((f[i] - x[i]) * log_c(1-p[i]))) for  i=one(Float64):size(iIndex,1)))
-    # 		@constraint(m, sum(x[i] for i=one(Float64):size(iIndex,1))-sum(p) <=+1)
-    # 		@constraint(m, sum(x[i] for i=one(Float64):size(iIndex,1))-sum(p) >=-1)
+    # 		@variable(m, x[i=one(Float64):size(i_index,1)], Bin)
+    # 		@objective(m, Max, sum((x[i]*log_c(p[i]) + ((f[i] - x[i]) * log_c(1-p[i]))) for  i=one(Float64):size(i_index,1)))
+    # 		@constraint(m, sum(x[i] for i=one(Float64):size(i_index,1))-sum(p) <=+1)
+    # 		@constraint(m, sum(x[i] for i=one(Float64):size(i_index,1))-sum(p) >=-1)
     #
     # 		#@constraint(m, [n=one(Float64):(size(nindex[i],1)-1)], x[n] <= x[n+1] )
     # 		solve(m)
@@ -183,17 +183,17 @@ function generate_responses(
     if method == "cumItemsPattern"
         for n = 1:N#4+
             println("start person ", n)
-            iIndex = iindex[n]
-            iIndex = size(iIndex, 1)
-            p2 = pr[iIndex, n]
+            i_index = iindex[n]
+            i_index = size(i_index, 1)
+            p2 = pr[i_index, n]
             p2 = hcat((1 .- p2), p2)#2
             patterns = Vector{Vector{Int64}}(undef, 1)
             n_pattern = Vector{Int64}(undef, 1)
             for r = one(Float64):1000
-                respn = Vector{Int64}(undef, iIndex)
-                unif = rand(Uniform(0, 1), iIndex)#5
-                samplei = sample(collect(1:iIndex), iIndex, replace = false)
-                for i = one(Float64):iIndex
+                respn = Vector{Int64}(undef, i_index)
+                unif = rand(Distributions.Uniform(0, 1), i_index)#5
+                samplei = sample(collect(1:i_index), i_index, replace = false)
+                for i = one(Float64):i_index
                     csum = p2[samplei[i], 1]#8
                     cat = 0#9
                     while csum < unif[samplei[i]]
@@ -228,23 +228,23 @@ function generate_responses(
             n_patterns = size(patterns, 1)
             prob_patterns = n_pattern ./ 1000
             println(prob_patterns)
-            resp[iIndex, n] .= sample(patterns, pweights(prob_patterns), 1)
+            resp[i_index, n] .= sample(patterns, Distributions.pweights(prob_patterns), 1)
             println("end person ", n)
         end
     end
     if method == "classicUniformPattern"
         for n = 1:N#4+
             println("start person ", n)
-            iIndex = iindex[n]
-            iIndex = size(iIndex, 1)
+            i_index = iindex[n]
+            i_index = size(i_index, 1)
             patterns = Vector{Vector{Int64}}(undef, 1)
             n_pattern = Vector{Int64}(undef, 1)
             for r = one(Float64):1000
-                respn = Vector{Int64}(undef, iIndex)
-                unif = rand(Uniform(0, 1), iIndex)#5
-                samplei = sample(collect(1:iIndex), iIndex, replace = false)
-                for i = one(Float64):iIndex#7
-                    if unif[samplei[i]] < p[samplei[i], n]
+                respn = Vector{Int64}(undef, i_index)
+                unif = rand(Distributions.Uniform(0, 1), i_index)#5
+                samplei = sample(collect(1:i_index), i_index, replace = false)
+                for i = one(Float64):i_index#7
+                    if unif[samplei[i]] < pr[samplei[i], n]
                         respn[i] = one(Float64)
                     else
                         respn[i] = 0
@@ -271,7 +271,7 @@ function generate_responses(
             end
             n_patterns = size(patterns, 1)
             prob_patterns = n_pattern ./ 1000
-            resp[iIndex, n] .= sample(patterns, pweights(prob_patterns), 1)
+            resp[i_index, n] .= sample(patterns, Distributions.pweights(prob_patterns), 1)
             println("end person ", n)
         end
 

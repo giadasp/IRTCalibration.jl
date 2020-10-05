@@ -99,7 +99,6 @@ function cubic_spline_int(X::Vector{Float64}, NewX::Vector{Float64}, Wk::Vector{
         #Wk_linear[k]=interp_linear(X[k])
         Wk_cubic[k] = interp_cubic(X[k])
     end
-
     #println(Wk_linear)
     #println(Wk_cubic)
     #Wk=sum([Wk_linear,Wk_cubic],dims=1)[1]./2
@@ -114,79 +113,80 @@ function cubic_spline_int(X::Vector{Float64}, NewX::Vector{Float64}, Wk::Vector{
     println(Wk)
     return Wk::Vector{Float64}
 end
-function cubic_spline_direct(X::Vector{Float64}, NewX::Vector{Float64}, Wk::Vector{Float64})
-    bw = abs(NewX[3] - NewX[2])
-    K = size(X, 1)
-    ok = 0
-    #Wk2=copy(Wk)
-    # while ok==0
-    # 	if NewX[1]>X[1]
-    # 		NewX=vcat(NewX[1]-bw,NewX)
-    # 		Wk2=vcat(zero(Float64),Wk2)
-    # 	end
-    # 	if NewX[end]<X[end]
-    # 		NewX=vcat(NewX,NewX[end]+bw)
-    # 		Wk2=vcat(Wk2,zero(Float64))
-    # 	end
-    # 	if NewX[1]<=X[1] && NewX[end]>=X[end]
-    # 		ok=1
-    # 	end
-    # end
-    # Wk=Wk./sum(Wk)
-    #interp_cubic = CubicSplineInterpolation(NewX, Wk2)
-    #BSpline(Quadratic(Line(OnGrid()))) or BSpline(Cubic(Line(OnGrid()))) or BSpline(Quadratic(Line(OnGrid())))
-    #type Constant, Linear, Quadratic, and Cubic
-    #for boundaries can be OnGrid (at edge of the points), OnCell (hal way between the points),
-    #boundary conditions Flat, Line, Natural, Free, Periodic and Reflect
-    #not bad BSpline(Cubic(Flat(OnGrid())))), NewX), Flat()
-    #better hist but higher RMSE BSpline(Cubic(Line(OnGrid())))), NewX), Flat()
-    #separate the knots in areas
-    #main area
-    # der=[abs(Wk2[k]-Wk2[k+1])/bw for k=1:(K-1)]
-    println(Wk)
-    # foundInf=0
-    # foundSup=0
-    # mainArealiminf=1
-    # mainArealimsup=K+2
-    # k=1
-    # while (foundInf+foundSup<2 && k<K)
-    # 	#look for inf
-    # 	if foundInf<1
-    # 		if ((abs(Wk[k]-Wk[k+1]))/bw)>1e-3
-    # 			mainArealiminf=max(k-2,mainArealiminf)
-    # 			foundInf=1
-    # 		end
-    # 	end
-    # 	if foundSup<1
-    # 		if (abs(Wk[K-k+1]-Wk[K-k]))/bw>1e-3
-    # 			mainArealimsup=min(K-k+3,mainArealimsup)
-    # 			foundSup=1
-    # 		end
-    # 	end
-    # 	#llof for sup
-    # 	k+=1
-    # end
-    # # mainArealiminf=max(findfirst(der.>1e-4)-1,1)
-    # # mainArealimsup=min(findlast(der.>1e-4)+2,K)
-    # Wk=Wk[mainArealiminf:mainArealimsup]
-    # NewX=NewX[mainArealiminf:mainArealimsup]
-    K2 = size(NewX, 1)
+#Dierckx package
+# function cubic_spline_direct(X::Vector{Float64}, NewX::Vector{Float64}, Wk::Vector{Float64})
+#     bw = abs(NewX[3] - NewX[2])
+#     K = size(X, 1)
+#     ok = 0
+#     #Wk2=copy(Wk)
+#     # while ok==0
+#     # 	if NewX[1]>X[1]
+#     # 		NewX=vcat(NewX[1]-bw,NewX)
+#     # 		Wk2=vcat(zero(Float64),Wk2)
+#     # 	end
+#     # 	if NewX[end]<X[end]
+#     # 		NewX=vcat(NewX,NewX[end]+bw)
+#     # 		Wk2=vcat(Wk2,zero(Float64))
+#     # 	end
+#     # 	if NewX[1]<=X[1] && NewX[end]>=X[end]
+#     # 		ok=1
+#     # 	end
+#     # end
+#     # Wk=Wk./sum(Wk)
+#     #interp_cubic = CubicSplineInterpolation(NewX, Wk2)
+#     #BSpline(Quadratic(Line(OnGrid()))) or BSpline(Cubic(Line(OnGrid()))) or BSpline(Quadratic(Line(OnGrid())))
+#     #type Constant, Linear, Quadratic, and Cubic
+#     #for boundaries can be OnGrid (at edge of the points), OnCell (hal way between the points),
+#     #boundary conditions Flat, Line, Natural, Free, Periodic and Reflect
+#     #not bad BSpline(Cubic(Flat(OnGrid())))), NewX), Flat()
+#     #better hist but higher RMSE BSpline(Cubic(Line(OnGrid())))), NewX), Flat()
+#     #separate the knots in areas
+#     #main area
+#     # der=[abs(Wk2[k]-Wk2[k+1])/bw for k=1:(K-1)]
+#     println(Wk)
+#     # foundInf=0
+#     # foundSup=0
+#     # mainArealiminf=1
+#     # mainArealimsup=K+2
+#     # k=1
+#     # while (foundInf+foundSup<2 && k<K)
+#     # 	#look for inf
+#     # 	if foundInf<1
+#     # 		if ((abs(Wk[k]-Wk[k+1]))/bw)>1e-3
+#     # 			mainArealiminf=max(k-2,mainArealiminf)
+#     # 			foundInf=1
+#     # 		end
+#     # 	end
+#     # 	if foundSup<1
+#     # 		if (abs(Wk[K-k+1]-Wk[K-k]))/bw>1e-3
+#     # 			mainArealimsup=min(K-k+3,mainArealimsup)
+#     # 			foundSup=1
+#     # 		end
+#     # 	end
+#     # 	#llof for sup
+#     # 	k+=1
+#     # end
+#     # # mainArealiminf=max(findfirst(der.>1e-4)-1,1)
+#     # # mainArealimsup=min(findlast(der.>1e-4)+2,K)
+#     # Wk=Wk[mainArealiminf:mainArealimsup]
+#     # NewX=NewX[mainArealiminf:mainArealimsup]
+#     K2 = size(NewX, 1)
 
-    #interp_cubic=Dierckx.Spline1D(NewXMainArea, WkMainArea; w=(Distributions.pdf.(Distributions.Normal(0,1),NewXMainArea)./(sum(Distributions.pdf.(Distributions.Normal(0,1),NewXMainArea)))), k=3, bc="zero", s=0.00)
-    idx = collect(1:Int(trunc((K2) / (min(6, K2 - 1)))):K2)[2:(end-1)] #take only 5 points as knots
-    interp_cubic =
-        Dierckx.Spline1D(NewX, Wk, NewX[3:K2-2]; w = ones(K2), k = 1, bc = "nearest")#, s=0.00) #good with 11 points
+#     #interp_cubic=Dierckx.Spline1D(NewXMainArea, WkMainArea; w=(Distributions.pdf.(Distributions.Normal(0,1),NewXMainArea)./(sum(Distributions.pdf.(Distributions.Normal(0,1),NewXMainArea)))), k=3, bc="zero", s=0.00)
+#     idx = collect(1:Int(trunc((K2) / (min(6, K2 - 1)))):K2)[2:(end-1)] #take only 5 points as knots
+#     interp_cubic =
+#         Dierckx.Spline1D(NewX, Wk, NewX[3:K2-2]; w = ones(K2), k = 1, bc = "nearest")#, s=0.00) #good with 11 points
 
-    Wk = zeros(K)
-    for k = 1:K
-        Wk[k] = Dierckx.evaluate(interp_cubic, X[k])
-    end
-    #println(Wk)
-    Wk = clamp.(Wk, 1e-10, one(Float64))
-    #Wk=Wk.+maximum(abs.(Wk[findall(Wk.<0)]))
+#     Wk = zeros(K)
+#     for k = 1:K
+#         Wk[k] = Dierckx.evaluate(interp_cubic, X[k])
+#     end
+#     #println(Wk)
+#     Wk = clamp.(Wk, 1e-10, one(Float64))
+#     #Wk=Wk.+maximum(abs.(Wk[findall(Wk.<0)]))
 
-    Wk = Wk ./ sum(Wk)
-    println(Wk)
+#     Wk = Wk ./ sum(Wk)
+#     println(Wk)
 
-    return Wk::Vector{Float64}
-end
+#     return Wk::Vector{Float64}
+# end
