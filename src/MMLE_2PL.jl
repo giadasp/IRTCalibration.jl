@@ -306,7 +306,6 @@ function calibrate(mdl::LatentModel)
                         likelihood_matrix,
                         new_N,
                         K,
-                        new_n_items,
                         i_index,
                         new_responses,
                         Wk,

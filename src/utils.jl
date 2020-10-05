@@ -60,7 +60,6 @@ function posterior(
     lh::Matrix{Float64},
     N::Int64,
     K::Int64,
-    I::Int64,
     i_index::Vector{Vector{Int64}},
     r::Matrix{Float64},
     Wk::Vector{Float64},
