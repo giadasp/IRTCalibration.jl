@@ -1,7 +1,6 @@
 function my_rescale(
     X::Vector{Float64},
     Wk::Vector{Float64},
-    metric::Vector{Float64},
     observed::Vector{Float64},
 )
     #println("theta had mean ",Wk'*X)

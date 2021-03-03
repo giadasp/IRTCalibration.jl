@@ -3,7 +3,6 @@ function max_i(
     sumpk_i::Vector{Float64},
     r1_i::Vector{Float64},
     pars_i::Vector{Float64},
-    n_par::Int64,
     opt::NLopt.Opt,
 )
     function myf(x::Vector, grad::Vector)

@@ -239,9 +239,6 @@ function calibrate(mdl::LatentModel)
         oneoverN = fill(1 / new_N, new_N)
         new_latent_vals = zeros(new_N, n_latent + 1)
         #r=zeros(Float64,n_par,new_n_items)
-        println(new_pars[1, 1])
-        println(Xk[30:40])
-        println(Wk[30:40])
         while endOfWhile < 1
             ################################################################
             ####					ACCELLERATE
@@ -345,7 +342,6 @@ function calibrate(mdl::LatentModel)
                 #println("time elapsed for Rescale IntOpt ",time()-before_time)
                 ################################################################
             end
-
             ############################################################
             ####					SAVE
             ############################################################
